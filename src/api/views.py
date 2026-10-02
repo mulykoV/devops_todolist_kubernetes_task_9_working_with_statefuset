@@ -5,10 +5,7 @@ from api.serializers import TodoListSerializer, TodoSerializer, UserSerializer
 from lists.models import Todo, TodoList
 
 from django.http import HttpResponse
-from django.utils import timezone
-import time
-
-startup_time = timezone.now()
+from django.db import connections, DatabaseError
 
 class IsCreatorOrReadOnly(permissions.BasePermission):
     """
@@ -66,11 +63,10 @@ def health(request):
 
 # Readiness Check View
 def ready(request):
-    # Calculate elapsed time since startup
-    elapsed_time = timezone.now() - startup_time
-    if elapsed_time.total_seconds() < 30:
-        # Return HTTP 500 for the first 30 seconds after startup
-        return HttpResponse("Service not ready", status=500, content_type="text/plain")
-    else:
-        # After 30 seconds, return HTTP 200
-        return HttpResponse("Readiness OK", content_type="text/plain")
+    try:
+        with connections["default"].cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+    except DatabaseError:
+        return HttpResponse("Database unavailable", status=503, content_type="text/plain")
+    return HttpResponse("Readiness OK", content_type="text/plain")

@@ -5,9 +5,5 @@ metadata:
   namespace: mysql
 data:
   init.sql: |
+    CREATE DATABASE IF NOT EXISTS app_db CHARACTER SET utf8mb4;
     GRANT ALL PRIVILEGES ON app_db.* TO 'app_user'@'%';
-    USE app_db;
-    CREATE TABLE counter (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      value INT
-    );
